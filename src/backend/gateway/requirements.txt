@@ -1,0 +1,6 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.0
+grpcio==1.66.1
+pydantic>=2.7
+typing-extensions>=4.12.2
+protobuf==4.25.0

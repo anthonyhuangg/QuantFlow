@@ -1,0 +1,27 @@
+{
+    "Port": 14000,
+    "UseRealData": true,
+    "Instruments": [
+        {
+            "Id": 1,
+            "Symbol": "BTC",
+            "Specifications": {
+                "Depth": 10
+            }
+        },
+        {
+            "Id": 2,
+            "Symbol": "ETH",
+            "Specifications": {
+                "Depth": 5
+            }
+        },
+        {
+            "Id": 3,
+            "Symbol": "ADA",
+            "Specifications": {
+                "Depth": 10
+            }
+        }
+    ]
+}

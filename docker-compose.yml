@@ -1,0 +1,38 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: src/backend/server/Dockerfile
+    container_name: qf-server
+    ports:
+      - "14000:14000"
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./src/backend/config.json:/app/config.json:ro
+
+  gateway:
+    build:
+      context: .
+      dockerfile: src/backend/gateway/Dockerfile
+    container_name: qf-gateway
+    depends_on:
+      - server
+    ports:
+      - "8001:8001"
+    environment:
+      GRPC_HOST: server
+      GRPC_PORT: 14000
+      PYTHONUNBUFFERED: "1"
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: qf-frontend
+    depends_on:
+      - gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_GATEWAY_URL: "http://localhost:8001"

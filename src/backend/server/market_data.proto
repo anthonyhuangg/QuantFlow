@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package market_data;
+
+service MarketDataService {
+    // Subscribe to orderbook updates for a specific instrument
+    rpc SubscribeOrderbook(SubscriptionRequest) returns (stream OrderbookUpdate);
+
+    // Get available instruments
+    rpc GetInstruments(Empty) returns (InstrumentsResponse);
+}
+
+message Empty {}
+
+message SubscriptionRequest {
+    int32 instrument_id = 1;
+}
+
+message Instrument {
+    int32 id = 1;
+    string symbol = 2;
+    int32 depth = 3;
+}
+
+message InstrumentsResponse {
+    repeated Instrument instruments = 1;
+}
+
+message PriceLevel {
+    double price = 1;
+    double quantity = 2;
+}
+
+message OrderbookSnapshot {
+    int32 instrument_id = 1;
+    repeated PriceLevel bids = 2;
+    repeated PriceLevel asks = 3;
+    int64 timestamp = 4;
+}
+
+enum UpdateType {
+    ADD = 0;
+    REMOVE = 1;
+    REPLACE = 2;
+}
+
+message OrderbookIncremental {
+    int32 instrument_id = 1;
+    UpdateType update_type = 2;
+    PriceLevel level = 3;
+    bool is_bid = 4;  // true for bid, false for ask
+    int64 timestamp = 5;
+}
+
+message OrderbookUpdate {
+    oneof update {
+        OrderbookSnapshot snapshot = 1;
+        OrderbookIncremental incremental = 2;
+    }
+}
