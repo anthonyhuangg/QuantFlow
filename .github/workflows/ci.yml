@@ -2,21 +2,38 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
-  backend:
-    name: Backend (Python) tests
+  test:
+    name: Backend Tests (Python)
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-
-    env:
-      PYTHONPATH: ./src
+    services:
+      server:
+        image: python:3.11
+        env:
+          PYTHONPATH: /work/src
+        volumes:
+          - .:/work
+        ports:
+          - 14000:14000
+        options: >-
+          --workdir /work
+          --entrypoint /bin/bash
+      gateway:
+        image: python:3.11
+        env:
+          PYTHONPATH: /work/src
+        volumes:
+          - .:/work
+        ports:
+          - 8001:8001
+        options: >-
+          --workdir /work
+          --entrypoint /bin/bash
 
     steps:
       - name: Checkout repository
@@ -29,24 +46,25 @@ jobs:
 
       - name: Install backend dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -r src/backend/server/requirements.txt
           pip install -r src/backend/gateway/requirements.txt
-          # pytest might not be in your requirements; ensure it's installed
-          pip install pytest
+
+      - name: Start backend server
+        run: |
+          python -m src.backend.server.server &
+          sleep 5
+
+      - name: Start gateway
+        run: |
+          uvicorn src.backend.gateway.main:app --host 0.0.0.0 --port 8001 &
+          sleep 5
 
       - name: Run tests
-        run: |
-          pytest
+        run: pytest
 
   frontend:
-    name: Frontend (Next.js) build
+    name: Frontend Build (Next.js)
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        shell: bash
-        working-directory: src/frontend
 
     steps:
       - name: Checkout repository
@@ -57,13 +75,12 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: |
-            src/frontend/package-lock.json
+          cache-dependency-path: src/frontend/package-lock.json
 
       - name: Install dependencies
-        run: |
-          npm ci
+        working-directory: src/frontend
+        run: npm ci
 
-      - name: Build
-        run: |
-          npm run build
+      - name: Build frontend
+        working-directory: src/frontend
+        run: npm run build
