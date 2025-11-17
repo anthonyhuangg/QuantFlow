@@ -4,7 +4,6 @@ A real-time market data visualisation platform in Python that streams live order
 
 ![Dashboard Screenshot](./docs/dashboard-preview.png)
 
----
 
 ## Motivation
 
@@ -15,7 +14,6 @@ This project let me explore:
 
 - low-latency gRPC streaming
 - WebSocket fan-out and buffering
----
 
 ## Quick Start
 
