@@ -4,6 +4,8 @@ import json
 import websockets
 import time
 
+from .metrics import metrics
+
 class BinanceOrderbookManager:
     """Manages real-time orderbook data from Binance WebSocket streams."""
 
@@ -42,14 +44,24 @@ class BinanceOrderbookManager:
 
     async def _start_websocket_stream(self, symbol):
         """Start WebSocket stream for a symbol."""
-        stream_name = f"{symbol}@depth@100ms"
+        stream_name = f"{symbol}@depth20@100ms"
         url = f"{self.base_url}{stream_name}"
+        reconnect_start = None
 
         while True:
             try:
                 print(f"Connecting to Binance WebSocket for {symbol.upper()}...")
+                connect_start = time.time() * 1000
                 async with websockets.connect(url) as websocket:
+                    connected_at = time.time() * 1000
                     print(f"Connected to {symbol.upper()} stream")
+
+                    # Record reconnection recovery time if this was a reconnect
+                    if reconnect_start is not None:
+                        recovery_ms = connected_at - reconnect_start
+                        metrics.record_reconnection(symbol, recovery_ms)
+                        print(f"Reconnected {symbol.upper()} in {recovery_ms:.0f}ms")
+                        reconnect_start = None
 
                     async for message in websocket:
                         data = json.loads(message)
@@ -57,18 +69,27 @@ class BinanceOrderbookManager:
 
             except websockets.exceptions.ConnectionClosed:
                 print(f"WebSocket connection closed for {symbol}, reconnecting...")
+                reconnect_start = time.time() * 1000
                 await asyncio.sleep(5)
             except Exception as e:
                 print(f"Error in WebSocket stream for {symbol}: {e}")
+                if reconnect_start is None:
+                    reconnect_start = time.time() * 1000
                 await asyncio.sleep(5)
 
     async def _process_orderbook_update(self, symbol, data):
-        """Process incoming orderbook data from Binance."""
-        if 'b' not in data or 'a' not in data:
+        """Process incoming orderbook data from Binance.
+
+        The @depth20 stream sends full top-20 snapshots (fields: bids, asks),
+        unlike the @depth diff stream (fields: b, a) which sends incremental diffs.
+        """
+        binance_receipt_ts = time.time() * 1000  # timestamp at moment of receipt
+
+        if 'bids' not in data or 'asks' not in data:
             return
 
-        bids = [(float(price), float(qty)) for price, qty in data['b'] if float(qty) > 0]
-        asks = [(float(price), float(qty)) for price, qty in data['a'] if float(qty) > 0]
+        bids = [(float(price), float(qty)) for price, qty in data['bids']]
+        asks = [(float(price), float(qty)) for price, qty in data['asks']]
 
         # Sort bids (highest first) and asks (lowest first)
         bids.sort(reverse=True)
@@ -79,7 +100,8 @@ class BinanceOrderbookManager:
             'bids': bids,
             'asks': asks,
             'timestamp': int(time.time() * 1000),
-            'last_update_id': data.get('lastUpdateId', 0)
+            'last_update_id': data.get('lastUpdateId', 0),
+            'binance_receipt_ts': binance_receipt_ts,
         }
 
         self.orderbooks[symbol] = orderbook_data
@@ -119,6 +141,7 @@ class RealDataOrderbook:
         self.binance_manager = binance_manager
         self.current_data = None
         self._subscribers = []
+        self._feed_started = False
         self.binance_symbol = self._map_to_binance_symbol(instrument.symbol)
 
     def _map_to_binance_symbol(self, symbol):
@@ -132,6 +155,9 @@ class RealDataOrderbook:
 
     async def start_real_data_feed(self):
         """Start receiving real data from Binance"""
+        if self._feed_started:
+            return
+        self._feed_started = True
         await self.binance_manager.subscribe_to_symbol(
             self.binance_symbol,
             self._handle_binance_update
@@ -139,6 +165,9 @@ class RealDataOrderbook:
 
     async def stop_real_data_feed(self):
         """Stop receiving real data"""
+        if not self._feed_started:
+            return
+        self._feed_started = False
         await self.binance_manager.unsubscribe_from_symbol(
             self.binance_symbol,
             self._handle_binance_update

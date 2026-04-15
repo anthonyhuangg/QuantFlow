@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import server.market_data_pb2 as pb
 import server.market_data_pb2_grpc as pb_grpc
+from server.metrics import metrics
 
 GRPC_HOST = os.getenv("GRPC_HOST", "localhost")
 GRPC_PORT = int(os.getenv("GRPC_PORT", "14000"))
@@ -30,6 +31,7 @@ async def lifespan(app):
             await channel.close()
 
 app = FastAPI(title="QuantFlow Gateway", lifespan=lifespan)
+metrics.enable_memory_tracking()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -50,11 +52,18 @@ async def instruments(request: Request):
 async def health():
     return {"status": "ok"}
 
+
+# Metrics endpoint — exposes throughput, latency percentiles, queue drops, connections, memory
+@app.get("/metrics")
+async def get_metrics():
+    return metrics.full_report()
+
 # Stream updates as JSON
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
     await ws.accept()
     stream_call = None
+    tracked_instrument_id = None
     try:
         qs = dict(ws.query_params)
         if "instrumentId" not in qs:
@@ -62,18 +71,34 @@ async def ws_endpoint(ws: WebSocket):
             await ws.close()
             return
 
-        instrument_id = int(qs["instrumentId"])
+        try:
+            instrument_id = int(qs["instrumentId"])
+        except (ValueError, TypeError):
+            await ws.send_text(json.dumps({"error": "instrumentId must be an integer"}))
+            await ws.close()
+            return
         stub = ws.app.state.stub
         req = pb.SubscriptionRequest(instrument_id=instrument_id)
+
+        tracked_instrument_id = instrument_id
+        metrics.record_connection(instrument_id)
 
         # Subscribe to gRPC stream
         stream_call = stub.SubscribeOrderbook(req)
 
         # Forward updates to WebSocket client
+        msg_count = 0
         async for update in stream_call:
-            payload: Dict[str, Any] = {"gateway_ts": int(time.perf_counter() * 1000)}
+            msg_count += 1
+            metrics.record_message(instrument_id)
+            gateway_ts = int(time.time() * 1000)
+            payload: Dict[str, Any] = {"gateway_ts": gateway_ts}
+
             if update.HasField("snapshot"):
                 s = update.snapshot
+                # Record gRPC->gateway latency (server timestamp -> gateway receipt)
+                if s.timestamp > 0:
+                    metrics.e2e_backend_latency.record(gateway_ts - s.timestamp)
                 payload.update({
                     "type": "snapshot",
                     "instrument_id": s.instrument_id,
@@ -83,6 +108,8 @@ async def ws_endpoint(ws: WebSocket):
                 })
             else:
                 inc = update.incremental
+                if inc.timestamp > 0:
+                    metrics.e2e_backend_latency.record(gateway_ts - inc.timestamp)
                 payload.update({
                     "type": "incremental",
                     "instrument_id": inc.instrument_id,
@@ -105,9 +132,11 @@ async def ws_endpoint(ws: WebSocket):
         except Exception:
             pass
     finally:
+        if tracked_instrument_id is not None:
+            metrics.record_disconnection(tracked_instrument_id)
         try:
             if stream_call is not None:
-                await stream_call.cancel()
+                stream_call.cancel()
         except Exception:
             pass
         try:
