@@ -8,11 +8,9 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Label,
 } from "recharts";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
-// Build cumulative sides (bids descending, asks ascending)
 function buildSide(
   levels: [number, number][],
   side: "bid" | "ask"
@@ -23,11 +21,17 @@ function buildSide(
 
   let cumulative = 0;
 
-  return sorted.map(([price, qty]) => {
+  const result = sorted.map(([price, qty]) => {
     cumulative += qty;
     return { price, cumulative, side };
   });
+
+  if (side === "bid") result.reverse();
+
+  return result;
 }
+
+type SideRow = { price: number; cumulative: number; side: string };
 
 export default function DepthChart({
   bids,
@@ -37,134 +41,131 @@ export default function DepthChart({
   asks: [number, number][];
 }) {
   const [paused, setPaused] = useState(false);
-  const [frozenData, setFrozenData] = useState<{
-    bidData: any[];
-    askData: any[];
-  } | null>(null);
+  const frozenRef = useRef<{ bidData: SideRow[]; askData: SideRow[] } | null>(null);
 
-  // If paused, use frozen snapshot else update live
-  const { bidData, askData } = useMemo(() => {
-    if (paused && frozenData) return frozenData;
-
-    const newData = {
+  const liveData = useMemo(
+    () => ({
       bidData: buildSide(bids, "bid"),
       askData: buildSide(asks, "ask"),
-    };
+    }),
+    [bids, asks]
+  );
 
-    if (!paused) setFrozenData(newData);
-    return newData;
-  }, [bids, asks, paused]);
+  const { bidData, askData } = paused && frozenRef.current ? frozenRef.current : liveData;
 
-  // Compute global price range
+  const togglePause = () => {
+    if (!paused) frozenRef.current = liveData;
+    else frozenRef.current = null;
+    setPaused((p) => !p);
+  };
+
   const allPrices = [
     ...bidData.map((b) => b.price),
     ...askData.map((a) => a.price),
   ];
-
-  const minPrice = Math.min(...allPrices);
-  const maxPrice = Math.max(...allPrices);
-  const padding = (maxPrice - minPrice) * 0.12;
+  const hasData = allPrices.length > 0;
+  const minPrice = hasData ? Math.min(...allPrices) : 0;
+  const maxPrice = hasData ? Math.max(...allPrices) : 1;
+  const padding = (maxPrice - minPrice) * 0.12 || 1;
 
   return (
     <div className="card">
-      <div
-        className="card-header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h3>Orderbook Depth</h3>
+      <div className="card-header">
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <h3>Depth</h3>
+          <div className="legend">
+            <span className="legend-item">
+              <span className="legend-dot" style={{ background: "#0ecb81" }} />
+              Bids
+            </span>
+            <span className="legend-item">
+              <span className="legend-dot" style={{ background: "#f6465d" }} />
+              Asks
+            </span>
+          </div>
+        </div>
         <button
-          onClick={() => setPaused((p) => !p)}
-          style={{
-            background: paused ? "#ef4444" : "#16a34a",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            padding: "4px 10px",
-            cursor: "pointer",
-            fontSize: 13,
-          }}
+          onClick={togglePause}
+          className={`btn ${paused ? "btn-paused" : "btn-active"}`}
         >
-          {paused ? "Resume" : "Pause"}
+          {paused ? "● Resume" : "❚❚ Pause"}
         </button>
       </div>
 
-      <div className="card-body" style={{ height: 380, position: "relative" }}>
+      <div className="card-body" style={{ height: 420, position: "relative", padding: "16px 12px 8px 4px" }}>
         {paused && (
           <div
             style={{
               position: "absolute",
-              top: 8,
-              right: 12,
-              background: "rgba(0,0,0,0.4)",
-              color: "white",
-              padding: "2px 8px",
-              borderRadius: 4,
-              fontSize: 12,
+              top: 14,
+              right: 18,
+              background: "rgba(246, 70, 93, 0.1)",
+              border: "1px solid rgba(246, 70, 93, 0.3)",
+              color: "#f6465d",
+              padding: "3px 10px",
+              borderRadius: 3,
+              fontSize: 11,
+              fontWeight: 500,
+              zIndex: 5,
             }}
           >
-            ⏸ Paused — showing snapshot
+            Paused — snapshot
           </div>
         )}
 
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart>
-            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+          <AreaChart margin={{ top: 10, right: 12, left: 12, bottom: 20 }}>
+            <CartesianGrid vertical={false} />
 
             <XAxis
               type="number"
               dataKey="price"
               domain={[minPrice - padding, maxPrice + padding]}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11, fill: "#848e9c" }}
               tickFormatter={(v) => v.toFixed(2)}
-              stroke="#aaa"
-            >
-              <Label
-                value="Price"
-                offset={-5}
-                position="insideBottom"
-                style={{ fill: "#aaa", fontSize: 13 }}
-              />
-            </XAxis>
+              stroke="#2b3139"
+              tickLine={false}
+              axisLine={{ stroke: "#2b3139" }}
+            />
 
             <YAxis
               type="number"
               dataKey="cumulative"
               domain={[0, "auto"]}
-              tick={{ fontSize: 12 }}
-              stroke="#aaa"
-            >
-              <Label
-                value="Cumulative Quantity"
-                angle={-90}
-                position="insideLeft"
-                style={{
-                  fill: "#aaa",
-                  fontSize: 13,
-                  textAnchor: "middle",
-                }}
-              />
-            </YAxis>
+              tick={{ fontSize: 11, fill: "#848e9c" }}
+              tickFormatter={(v) => v.toFixed(2)}
+              stroke="#2b3139"
+              tickLine={false}
+              axisLine={false}
+              width={56}
+              orientation="right"
+            />
 
             <Tooltip
-              formatter={(v: any) => Number(v).toFixed(3)}
+              formatter={(v: any) => Number(v).toFixed(4)}
+              labelFormatter={(v: any) => `${Number(v).toFixed(2)}`}
               contentStyle={{
-                background: "#121722",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
-                fontFamily: "Inter, system-ui, sans-serif",
+                background: "#1e2329",
+                border: "1px solid #2b3139",
+                borderRadius: 4,
+                color: "#eaecef",
+                fontFamily: "IBM Plex Mono, monospace",
+                fontSize: 12,
+                padding: "6px 10px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
               }}
+              itemStyle={{ color: "#eaecef", padding: 0 }}
+              labelStyle={{ color: "#fcd535", marginBottom: 4, fontSize: 11, fontWeight: 600 }}
+              cursor={{ stroke: "#474d57", strokeWidth: 1, strokeDasharray: "3 3" }}
             />
 
             <Area
               data={bidData}
               type="stepAfter"
               dataKey="cumulative"
-              stroke="#16a34a"
-              fill="#16a34a33"
+              stroke="#0ecb81"
+              strokeWidth={1.5}
+              fill="rgba(14, 203, 129, 0.15)"
               name="Bids"
               isAnimationActive={false}
             />
@@ -173,8 +174,9 @@ export default function DepthChart({
               data={askData}
               type="stepAfter"
               dataKey="cumulative"
-              stroke="#ef4444"
-              fill="#ef444433"
+              stroke="#f6465d"
+              strokeWidth={1.5}
+              fill="rgba(246, 70, 93, 0.15)"
               name="Asks"
               isAnimationActive={false}
             />

@@ -39,8 +39,8 @@ export default function Page() {
   const wsBase = GATEWAY.replace(/^http/, "ws");
   const wsUrl = instIdNum != null ? `${wsBase}/ws?instrumentId=${instIdNum}` : undefined;
 
-  const { messages, connected } = useWebSocket(wsUrl);
-  const { book, spread, latencyMs, dropped } = useOrderbook(messages);
+  const { connected, subscribe } = useWebSocket(wsUrl);
+  const { book, spread, latencyMs } = useOrderbook(subscribe);
   const current = useMemo(
     () => (instIdNum != null ? instruments.find((i) => i.id === instIdNum) : undefined),
     [instruments, instIdNum]
@@ -50,7 +50,7 @@ export default function Page() {
     <div className="page">
       <header className="header">
         <div className="header-left">
-          <h1 className="title">QuantFlow Dashboard</h1>
+          <h1 className="title">Quant<span className="title-accent">Flow</span></h1>
           <StatusBadge connected={!!connected} />
         </div>
         <div className="header-right">
@@ -74,11 +74,10 @@ export default function Page() {
           {current && <div className="meta">Depth: {current.depth}</div>}
         </div>
       </header>
-      <section className="grid-4">
+      <section className="grid-3">
         <StatCard label="Spread" value={spread ? spread.value.toFixed(4) : "—"} />
         <StatCard label="Mid Price" value={spread ? spread.mid.toFixed(4) : "—"} />
         <StatCard label="Latency" value={`${latencyMs} ms`} />
-        <StatCard label="Dropped" value={String(dropped)} />
       </section>
       <section>
         <DepthChart bids={book.bids.slice(0, 10)} asks={book.asks.slice(0, 10)} />
