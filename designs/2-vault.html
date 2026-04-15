@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantFlow - Design 2: Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #070b14;
+    --panel: #0d1526;
+    --panel-hover: #111d33;
+    --gold: #c9a84c;
+    --gold-dim: #9a7f3a;
+    --gold-glow: rgba(201, 168, 76, 0.15);
+    --cream: #e8e0d0;
+    --text: #c4bfb4;
+    --muted: #6b6558;
+    --border: rgba(201, 168, 76, 0.12);
+    --steel: #8a9bb5;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html, body {
+    font-family: var(--font-mono);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Subtle grain texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 256px;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .page {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 40px 28px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 120px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+  }
+
+  .title {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--cream);
+    letter-spacing: -0.5px;
+  }
+
+  .title span {
+    color: var(--gold);
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--gold);
+  }
+
+  .dot {
+    width: 5px; height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--gold-glow);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+  }
+
+  .select-wrap label {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .select {
+    appearance: none;
+    background: var(--panel);
+    color: var(--cream);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    min-width: 240px;
+    border-radius: 2px;
+  }
+
+  .meta {
+    color: var(--muted);
+    font-size: 11px;
+    padding-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    border-radius: 2px;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+
+  /* Corner accents */
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 12px;
+    height: 12px;
+    border-top: 1px solid var(--gold-dim);
+    border-right: 1px solid var(--gold-dim);
+    opacity: 0.4;
+  }
+
+  .stat-label {
+    font-family: var(--font-serif);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--cream);
+  }
+
+  /* Card */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  /* Corner accents on card */
+  .card-corners {
+    position: absolute;
+    inset: 6px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .card-corners::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 16px; height: 16px;
+    border-top: 1px solid var(--gold-dim);
+    border-left: 1px solid var(--gold-dim);
+    opacity: 0.3;
+  }
+
+  .card-corners::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 16px; height: 16px;
+    border-bottom: 1px solid var(--gold-dim);
+    border-right: 1px solid var(--gold-dim);
+    opacity: 0.3;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header h3 {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--cream);
+    letter-spacing: 0.5px;
+  }
+
+  .btn-pause {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.2s;
+    border-radius: 1px;
+  }
+
+  .btn-pause:hover {
+    background: var(--gold-glow);
+    border-color: var(--gold-dim);
+  }
+
+  /* SVG depth */
+  .depth-svg {
+    width: 100%;
+    height: 380px;
+  }
+
+  .bid-fill { fill: rgba(201, 168, 76, 0.06); }
+  .bid-stroke { stroke: var(--gold); stroke-width: 1.5; fill: none; }
+  .ask-fill { fill: rgba(138, 155, 181, 0.06); }
+  .ask-stroke { stroke: var(--steel); stroke-width: 1.5; fill: none; }
+  .grid-line { stroke: rgba(201, 168, 76, 0.05); stroke-width: 0.5; }
+  .axis-label { fill: var(--muted); font-family: var(--font-mono); font-size: 10px; }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 28px 0;
+    color: var(--gold-dim);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .footer .gold { color: var(--gold-dim); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <div class="header-left">
+      <h1 class="title">Quant<span>Flow</span></h1>
+      <div class="badge">
+        <span class="dot"></span>
+        Connected
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="select-wrap">
+        <label>Instrument</label>
+        <select class="select">
+          <option>BTCUSDT (id 1)</option>
+          <option>ETHUSDT (id 2)</option>
+        </select>
+      </div>
+      <div class="meta">Depth: 10</div>
+    </div>
+  </header>
+
+  <section class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Spread</div>
+      <div class="stat-value">0.0100</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Mid Price</div>
+      <div class="stat-value">104,232.55</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Latency</div>
+      <div class="stat-value">3 ms</div>
+    </div>
+  </section>
+
+  <div class="divider">Orderbook</div>
+
+  <div class="card">
+    <div class="card-corners"></div>
+    <div class="card-header">
+      <h3>Depth Visualization</h3>
+      <button class="btn-pause">Pause</button>
+    </div>
+    <svg class="depth-svg" viewBox="0 0 800 380" preserveAspectRatio="none">
+      <!-- Grid -->
+      <line class="grid-line" x1="0" y1="76" x2="800" y2="76"/>
+      <line class="grid-line" x1="0" y1="152" x2="800" y2="152"/>
+      <line class="grid-line" x1="0" y1="228" x2="800" y2="228"/>
+      <line class="grid-line" x1="0" y1="304" x2="800" y2="304"/>
+      <line x1="400" y1="0" x2="400" y2="380" style="stroke: rgba(201,168,76,0.08); stroke-width: 1; stroke-dasharray: 4 4;"/>
+
+      <!-- Bid (gold) -->
+      <path class="bid-fill" d="M400,350 L400,275 L365,255 L330,228 L295,195 L260,172 L225,158 L190,150 L155,146 L120,145 L80,144 L80,350 Z"/>
+      <polyline class="bid-stroke" points="400,275 365,255 330,228 295,195 260,172 225,158 190,150 155,146 120,145 80,144"/>
+
+      <!-- Ask (steel) -->
+      <path class="ask-fill" d="M400,350 L400,280 L435,258 L470,232 L505,202 L540,178 L575,162 L610,153 L645,148 L680,146 L720,145 L720,350 Z"/>
+      <polyline class="ask-stroke" points="400,280 435,258 470,232 505,202 540,178 575,162 610,153 645,148 680,146 720,145"/>
+
+      <text class="axis-label" x="80" y="370">104,228</text>
+      <text class="axis-label" x="240" y="370">104,230</text>
+      <text class="axis-label" x="385" y="370">mid</text>
+      <text class="axis-label" x="540" y="370">104,234</text>
+      <text class="axis-label" x="700" y="370">104,236</text>
+      <text class="axis-label" x="5" y="308">2.0</text>
+      <text class="axis-label" x="5" y="232">4.0</text>
+      <text class="axis-label" x="5" y="156">6.0</text>
+      <text class="axis-label" x="5" y="80">8.0</text>
+    </svg>
+  </div>
+
+  <div class="footer">
+    <div>Feed <span class="gold">Binance</span> | Protocol <span class="gold">WSS</span></div>
+    <div>Updates <span class="gold">1,204/s</span> | Buffer <span class="gold">0</span></div>
+  </div>
+</div>
+</body>
+</html>

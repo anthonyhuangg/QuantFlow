@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantFlow - Design 5: Polar Glass</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-1: #0f172a;
+    --bg-2: #1e1b4b;
+    --bg-3: #0c4a6e;
+    --glass: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover: rgba(255, 255, 255, 0.07);
+    --cyan: #06b6d4;
+    --cyan-glow: rgba(6, 182, 212, 0.3);
+    --magenta: #ec4899;
+    --magenta-glow: rgba(236, 72, 153, 0.3);
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html, body {
+    font-family: var(--font-body);
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* Animated aurora background */
+  body {
+    background: var(--bg-1);
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 20%, rgba(6,182,212,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 80%, rgba(236,72,153,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 50% 50%, rgba(30,27,75,0.8) 0%, transparent 70%);
+    animation: aurora 12s ease-in-out infinite alternate;
+    z-index: 0;
+  }
+
+  @keyframes aurora {
+    0% {
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(6,182,212,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(236,72,153,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 50%, rgba(30,27,75,0.8) 0%, transparent 70%);
+    }
+    50% {
+      background:
+        radial-gradient(ellipse 60% 80% at 70% 30%, rgba(6,182,212,0.15) 0%, transparent 55%),
+        radial-gradient(ellipse 80% 60% at 30% 70%, rgba(236,72,153,0.12) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 60% at 50% 40%, rgba(12,74,110,0.6) 0%, transparent 65%);
+    }
+    100% {
+      background:
+        radial-gradient(ellipse 70% 70% at 40% 60%, rgba(6,182,212,0.10) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 60% at 60% 20%, rgba(236,72,153,0.14) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 50% at 50% 50%, rgba(30,27,75,0.7) 0%, transparent 60%);
+    }
+  }
+
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 36px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Glass panel mixin */
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 16px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+
+  .title span {
+    background: linear-gradient(135deg, var(--cyan), var(--magenta));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .badge.glass {
+    border-radius: 999px;
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--cyan-glow), 0 0 16px var(--cyan-glow);
+    animation: pulse-halo 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-halo {
+    0%, 100% { box-shadow: 0 0 6px var(--cyan-glow); }
+    50% { box-shadow: 0 0 12px var(--cyan-glow), 0 0 24px var(--cyan-glow); }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .select-wrap label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .select {
+    appearance: none;
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    min-width: 220px;
+  }
+
+  .meta {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+
+  .stat-card:hover {
+    background: var(--glass-hover);
+  }
+
+  /* Glow edge on stat cards */
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(6,182,212,0.3), rgba(236,72,153,0.3), transparent);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 0 30px rgba(255,255,255,0.1);
+  }
+
+  /* Card */
+  .card {
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .card-header h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+  }
+
+  .btn-pause {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 16px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-pause:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  /* SVG */
+  .depth-svg {
+    width: 100%;
+    height: 380px;
+    display: block;
+  }
+
+  .grid-line { stroke: rgba(255,255,255,0.04); stroke-width: 0.5; }
+  .axis-label { fill: var(--muted); font-family: var(--font-body); font-size: 10px; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.bid { background: var(--cyan); box-shadow: 0 0 6px var(--cyan-glow); }
+  .legend-dot.ask { background: var(--magenta); box-shadow: 0 0 6px var(--magenta-glow); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <div class="header-left">
+      <h1 class="title">Quant<span>Flow</span></h1>
+      <div class="badge glass">
+        <span class="dot"></span>
+        Connected
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="select-wrap">
+        <label>Instrument</label>
+        <select class="select">
+          <option>BTCUSDT (id 1)</option>
+          <option>ETHUSDT (id 2)</option>
+        </select>
+      </div>
+      <div class="meta">Depth: 10</div>
+    </div>
+  </header>
+
+  <section class="stats">
+    <div class="stat-card glass">
+      <div class="stat-label">Spread</div>
+      <div class="stat-value">0.0100</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-label">Mid Price</div>
+      <div class="stat-value">104,232.55</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-label">Latency</div>
+      <div class="stat-value">3 ms</div>
+    </div>
+  </section>
+
+  <div class="card glass">
+    <div class="card-header">
+      <h3>Orderbook Depth</h3>
+      <button class="btn-pause">Pause</button>
+    </div>
+    <svg class="depth-svg" viewBox="0 0 800 380" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="bidGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.02"/>
+        </linearGradient>
+        <linearGradient id="askGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ec4899" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#ec4899" stop-opacity="0.02"/>
+        </linearGradient>
+        <filter id="glow-cyan">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-pink">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <line class="grid-line" x1="0" y1="76" x2="800" y2="76"/>
+      <line class="grid-line" x1="0" y1="152" x2="800" y2="152"/>
+      <line class="grid-line" x1="0" y1="228" x2="800" y2="228"/>
+      <line class="grid-line" x1="0" y1="304" x2="800" y2="304"/>
+      <line x1="400" y1="0" x2="400" y2="380" style="stroke: rgba(255,255,255,0.06); stroke-width:1; stroke-dasharray: 4 8;"/>
+
+      <!-- Bid (cyan) -->
+      <path d="M400,350 L400,275 L360,255 L320,226 L280,192 L240,168 L200,155 L160,148 L120,145 L80,143 L80,350 Z" fill="url(#bidGrad)"/>
+      <polyline points="400,275 360,255 320,226 280,192 240,168 200,155 160,148 120,145 80,143" fill="none" stroke="#06b6d4" stroke-width="2" filter="url(#glow-cyan)"/>
+
+      <!-- Ask (magenta) -->
+      <path d="M400,350 L400,280 L440,258 L480,232 L520,198 L560,175 L600,161 L640,153 L680,148 L720,146 L720,350 Z" fill="url(#askGrad)"/>
+      <polyline points="400,280 440,258 480,232 520,198 560,175 600,161 640,153 680,148 720,146" fill="none" stroke="#ec4899" stroke-width="2" filter="url(#glow-pink)"/>
+
+      <text class="axis-label" x="80" y="372">104,228</text>
+      <text class="axis-label" x="240" y="372">104,230</text>
+      <text class="axis-label" x="540" y="372">104,234</text>
+      <text class="axis-label" x="700" y="372">104,236</text>
+      <text class="axis-label" x="5" y="308">2.0</text>
+      <text class="axis-label" x="5" y="232">4.0</text>
+      <text class="axis-label" x="5" y="156">6.0</text>
+      <text class="axis-label" x="5" y="80">8.0</text>
+    </svg>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot bid"></span> Bids</div>
+      <div class="legend-item"><span class="legend-dot ask"></span> Asks</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

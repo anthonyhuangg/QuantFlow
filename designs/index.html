@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantFlow - Design Picker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #111;
+    color: #eee;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  p { color: #888; margin-bottom: 40px; font-size: 15px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 900px;
+    width: 100%;
+  }
+  a {
+    display: block;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 28px 24px;
+    text-decoration: none;
+    color: #eee;
+    transition: all 0.2s;
+  }
+  a:hover {
+    background: #222;
+    border-color: #555;
+    transform: translateY(-2px);
+  }
+  .num {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .name {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .desc {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.5;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-top: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .t1 { background: #0a2a0a; color: #00ff41; }
+  .t2 { background: #1a1508; color: #c9a84c; }
+  .t3 { background: #2a0000; color: #ff0000; }
+  .t4 { background: #1a1020; color: #c9a84c; }
+  .t5 { background: #0a1a2a; color: #06b6d4; }
+</style>
+</head>
+<body>
+  <h1>QuantFlow Designs</h1>
+  <p>Click any design to preview it. Pick your favorite.</p>
+  <div class="grid">
+    <a href="1-terminal-noir.html">
+      <div class="num">Design 01</div>
+      <div class="name">Terminal Noir</div>
+      <div class="desc">CRT/hacker aesthetic. Phosphor green on black, scanlines, monospace everything, blinking cursors.</div>
+      <span class="tag t1">Dark / Mono</span>
+    </a>
+    <a href="2-vault.html">
+      <div class="num">Design 02</div>
+      <div class="name">Vault</div>
+      <div class="desc">Bloomberg meets luxury. Dark navy, gold accents, serif headings, monospace data. Institutional & refined.</div>
+      <span class="tag t2">Dark / Luxe</span>
+    </a>
+    <a href="3-brutalist-grid.html">
+      <div class="num">Design 03</div>
+      <div class="name">Brutalist Grid</div>
+      <div class="desc">Light-mode anti-design. Harsh borders, no radius, offset shadows, asymmetric Swiss-poster layout.</div>
+      <span class="tag t3">Light / Raw</span>
+    </a>
+    <a href="4-obsidian-deco.html">
+      <div class="num">Design 04</div>
+      <div class="name">Obsidian Deco</div>
+      <div class="desc">Art Deco meets data viz. Geometric gold borders, ornamental dividers, teal/rose chart colors.</div>
+      <span class="tag t4">Dark / Ornate</span>
+    </a>
+    <a href="5-polar-glass.html">
+      <div class="num">Design 05</div>
+      <div class="name">Polar Glass</div>
+      <div class="desc">Glassmorphism over aurora gradients. Frosted panels, luminous glows, cyan/magenta depth chart.</div>
+      <span class="tag t5">Dark / Glass</span>
+    </a>
+  </div>
+</body>
+</html>

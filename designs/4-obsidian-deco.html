@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantFlow - Design 4: Obsidian Deco</title>
+<link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --panel: #12121e;
+    --gold: #c9a84c;
+    --gold-light: #dfc274;
+    --gold-dim: #7a6530;
+    --teal: #2dd4bf;
+    --rose: #f43f5e;
+    --text: #d4d0c8;
+    --muted: #5e5a50;
+    --border: rgba(201, 168, 76, 0.15);
+    --font-display: 'Poiret One', cursive;
+    --font-body: 'Raleway', sans-serif;
+  }
+
+  html, body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background deco pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(201,168,76,0.03) 30deg, transparent 60deg, rgba(201,168,76,0.02) 90deg, transparent 120deg);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Deco divider SVG */
+  .deco-divider {
+    display: flex;
+    justify-content: center;
+    margin: 28px 0;
+    opacity: 0.5;
+  }
+
+  .deco-divider svg { width: 200px; height: 20px; }
+  .deco-divider line { stroke: var(--gold); stroke-width: 0.5; }
+  .deco-divider polygon { fill: var(--gold); }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 0;
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: 48px;
+    color: var(--gold-light);
+    letter-spacing: 12px;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .subtitle {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* Controls row */
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 0;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    padding: 6px 18px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    background: var(--teal);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(45,212,191,0.4);
+  }
+
+  .select {
+    appearance: none;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 20px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    min-width: 220px;
+  }
+
+  .meta-text {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 0;
+  }
+
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+    position: relative;
+  }
+
+  /* Geometric border corners */
+  .stat-card::before, .stat-card::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+  }
+  .stat-card::before {
+    top: -1px; left: -1px;
+    border-top: 2px solid var(--gold);
+    border-left: 2px solid var(--gold);
+  }
+  .stat-card::after {
+    bottom: -1px; right: -1px;
+    border-bottom: 2px solid var(--gold);
+    border-right: 2px solid var(--gold);
+  }
+
+  .stat-label {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: var(--gold-light);
+    letter-spacing: 2px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card::before, .card::after {
+    content: '';
+    position: absolute;
+    width: 28px; height: 28px;
+    z-index: 2;
+  }
+  .card::before {
+    top: -1px; left: -1px;
+    border-top: 2px solid var(--gold);
+    border-left: 2px solid var(--gold);
+  }
+  .card::after {
+    bottom: -1px; right: -1px;
+    border-bottom: 2px solid var(--gold);
+    border-right: 2px solid var(--gold);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header h3 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--gold-light);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .btn-pause {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 6px 18px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+  }
+
+  .btn-pause:hover {
+    background: rgba(201,168,76,0.1);
+    border-color: var(--gold);
+  }
+
+  /* SVG */
+  .depth-svg {
+    width: 100%;
+    height: 380px;
+    display: block;
+  }
+
+  .grid-line { stroke: rgba(201,168,76,0.04); stroke-width: 0.5; }
+  .axis-label { fill: var(--muted); font-family: var(--font-body); font-size: 10px; font-weight: 400; letter-spacing: 0.5px; }
+
+  /* Fan motif */
+  .fan {
+    position: absolute;
+    bottom: -80px;
+    right: -80px;
+    width: 200px;
+    height: 200px;
+    opacity: 0.04;
+    z-index: 0;
+  }
+
+  .fan-line {
+    stroke: var(--gold);
+    stroke-width: 1;
+    transform-origin: 0 100%;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <h1 class="title">QuantFlow</h1>
+    <div class="subtitle">Real-time Orderbook Intelligence</div>
+  </header>
+
+  <div class="deco-divider">
+    <svg viewBox="0 0 200 20">
+      <line x1="0" y1="10" x2="70" y2="10"/>
+      <polygon points="80,10 90,5 100,10 90,15"/>
+      <polygon points="100,10 110,5 120,10 110,15"/>
+      <line x1="130" y1="10" x2="200" y2="10"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="badge">
+      <span class="dot"></span>
+      Connected
+    </div>
+    <select class="select">
+      <option>BTCUSDT (id 1)</option>
+      <option>ETHUSDT (id 2)</option>
+    </select>
+    <div class="meta-text">Depth: 10</div>
+  </div>
+
+  <div class="deco-divider">
+    <svg viewBox="0 0 200 20">
+      <line x1="0" y1="10" x2="70" y2="10"/>
+      <polygon points="80,10 90,5 100,10 90,15"/>
+      <polygon points="100,10 110,5 120,10 110,15"/>
+      <line x1="130" y1="10" x2="200" y2="10"/>
+    </svg>
+  </div>
+
+  <section class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Spread</div>
+      <div class="stat-value">0.0100</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Mid Price</div>
+      <div class="stat-value">104,232</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Latency</div>
+      <div class="stat-value">3 ms</div>
+    </div>
+  </section>
+
+  <div class="deco-divider">
+    <svg viewBox="0 0 200 20">
+      <line x1="0" y1="10" x2="70" y2="10"/>
+      <polygon points="80,10 90,5 100,10 90,15"/>
+      <polygon points="100,10 110,5 120,10 110,15"/>
+      <line x1="130" y1="10" x2="200" y2="10"/>
+    </svg>
+  </div>
+
+  <div class="card" style="position: relative; overflow: hidden;">
+    <!-- Fan motif -->
+    <svg class="fan" viewBox="0 0 200 200" style="position:absolute; bottom:-60px; right:-60px; width:200px; height:200px; opacity:0.06; z-index:0;">
+      <line x1="0" y1="200" x2="20" y2="0" class="fan-line"/>
+      <line x1="0" y1="200" x2="60" y2="5" class="fan-line"/>
+      <line x1="0" y1="200" x2="100" y2="15" class="fan-line"/>
+      <line x1="0" y1="200" x2="140" y2="35" class="fan-line"/>
+      <line x1="0" y1="200" x2="170" y2="65" class="fan-line"/>
+      <line x1="0" y1="200" x2="190" y2="100" class="fan-line"/>
+      <line x1="0" y1="200" x2="200" y2="140" class="fan-line"/>
+      <line x1="0" y1="200" x2="200" y2="180" class="fan-line"/>
+    </svg>
+
+    <div class="card-header" style="position: relative; z-index:1;">
+      <h3>Depth</h3>
+      <button class="btn-pause">Pause</button>
+    </div>
+
+    <svg class="depth-svg" viewBox="0 0 800 380" preserveAspectRatio="none" style="position: relative; z-index:1;">
+      <defs>
+        <linearGradient id="bidGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0.02"/>
+        </linearGradient>
+        <linearGradient id="askGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+
+      <line class="grid-line" x1="0" y1="76" x2="800" y2="76"/>
+      <line class="grid-line" x1="0" y1="152" x2="800" y2="152"/>
+      <line class="grid-line" x1="0" y1="228" x2="800" y2="228"/>
+      <line class="grid-line" x1="0" y1="304" x2="800" y2="304"/>
+      <line x1="400" y1="0" x2="400" y2="380" style="stroke: rgba(201,168,76,0.1); stroke-width:1; stroke-dasharray: 2 6;"/>
+
+      <!-- Bid (teal) -->
+      <path d="M400,350 L400,278 L362,256 L324,228 L286,194 L248,170 L210,156 L172,148 L134,145 L96,143 L80,143 L80,350 Z" fill="url(#bidGrad)"/>
+      <polyline points="400,278 362,256 324,228 286,194 248,170 210,156 172,148 134,145 96,143 80,143" fill="none" stroke="#2dd4bf" stroke-width="1.5"/>
+
+      <!-- Ask (rose) -->
+      <path d="M400,350 L400,282 L438,260 L476,233 L514,200 L552,177 L590,163 L628,154 L666,149 L704,147 L720,147 L720,350 Z" fill="url(#askGrad)"/>
+      <polyline points="400,282 438,260 476,233 514,200 552,177 590,163 628,154 666,149 704,147 720,147" fill="none" stroke="#f43f5e" stroke-width="1.5"/>
+
+      <text class="axis-label" x="80" y="372">104,228</text>
+      <text class="axis-label" x="240" y="372">104,230</text>
+      <text class="axis-label" x="540" y="372">104,234</text>
+      <text class="axis-label" x="700" y="372">104,236</text>
+      <text class="axis-label" x="5" y="308">2.0</text>
+      <text class="axis-label" x="5" y="232">4.0</text>
+      <text class="axis-label" x="5" y="156">6.0</text>
+      <text class="axis-label" x="5" y="80">8.0</text>
+    </svg>
+  </div>
+</div>
+</body>
+</html>

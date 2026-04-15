@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantFlow - Design 3: Brutalist Grid</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f0ede8;
+    --black: #0a0a0a;
+    --white: #ffffff;
+    --red: #ff0000;
+    --gray: #888;
+    --light-gray: #d0d0d0;
+    --font-mono: 'Space Mono', monospace;
+    --font-display: 'Archivo Black', sans-serif;
+    --shadow: 4px 4px 0 var(--black);
+  }
+
+  html, body {
+    font-family: var(--font-mono);
+    background: var(--bg);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+
+  /* Asymmetric header */
+  .header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 3px solid var(--black);
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: 52px;
+    line-height: 0.95;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    color: var(--black);
+  }
+
+  .title-sub {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: var(--gray);
+    margin-top: 8px;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid var(--black);
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 2px 2px 0 var(--black);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    background: #00cc00;
+    /* No border-radius — square */
+    animation: blink-dot 2s step-end infinite;
+  }
+
+  @keyframes blink-dot {
+    50% { opacity: 0.3; }
+  }
+
+  .select-wrap label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--gray);
+    margin-bottom: 4px;
+    text-align: right;
+  }
+
+  .select {
+    appearance: none;
+    background: var(--white);
+    color: var(--black);
+    border: 2px solid var(--black);
+    padding: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 220px;
+    box-shadow: 2px 2px 0 var(--black);
+    cursor: pointer;
+  }
+
+  /* Main grid: asymmetric */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 16px;
+    margin-bottom: 0;
+  }
+
+  /* Stats - vertical stack on right */
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--white);
+    border: 3px solid var(--black);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+
+  .stat-card.highlight {
+    background: var(--black);
+    color: var(--white);
+    box-shadow: 4px 4px 0 var(--red);
+  }
+
+  .stat-card.highlight .stat-label {
+    color: var(--gray);
+  }
+
+  .stat-card.highlight .stat-value {
+    color: var(--white);
+  }
+
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--gray);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--black);
+    letter-spacing: -1px;
+  }
+
+  .stat-unit {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--red);
+    margin-left: 4px;
+  }
+
+  /* Depth card */
+  .card {
+    background: var(--white);
+    border: 3px solid var(--black);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 3px solid var(--black);
+  }
+
+  .card-header h3 {
+    font-family: var(--font-display);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .btn-pause {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border: 2px solid var(--black);
+    background: var(--red);
+    color: var(--white);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 2px 2px 0 var(--black);
+    transition: transform 0.1s;
+  }
+
+  .btn-pause:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--black);
+  }
+
+  /* SVG */
+  .depth-svg {
+    width: 100%;
+    height: 400px;
+    display: block;
+  }
+
+  .bid-area { fill: rgba(0, 0, 0, 0.06); stroke: var(--black); stroke-width: 2.5; }
+  .ask-area { fill: rgba(255, 0, 0, 0.06); stroke: var(--red); stroke-width: 2.5; }
+  .grid-line { stroke: var(--light-gray); stroke-width: 0.5; }
+  .mid-line { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; }
+  .axis-label { fill: var(--gray); font-family: var(--font-mono); font-size: 10px; font-weight: 700; }
+
+  /* Red marker */
+  .marker {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 3px solid var(--black);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .footer .red { color: var(--red); font-weight: 700; }
+
+  /* Depth label */
+  .depth-label {
+    padding: 10px 16px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    border-bottom: 1px solid var(--light-gray);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <div>
+      <h1 class="title">Quant<br>Flow</h1>
+      <div class="title-sub">Real-time orderbook</div>
+    </div>
+    <div class="header-right">
+      <div class="badge">
+        <span class="dot"></span>
+        Connected
+      </div>
+      <div class="select-wrap">
+        <label>Instrument</label>
+        <select class="select">
+          <option>BTCUSDT (ID 1)</option>
+          <option>ETHUSDT (ID 2)</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-grid">
+    <div class="card">
+      <div class="card-header">
+        <h3>Orderbook Depth</h3>
+        <button class="btn-pause">Pause</button>
+      </div>
+      <div class="depth-label">BTCUSDT &mdash; Depth 10</div>
+      <svg class="depth-svg" viewBox="0 0 800 400" preserveAspectRatio="none">
+        <!-- Grid -->
+        <line class="grid-line" x1="0" y1="80" x2="800" y2="80"/>
+        <line class="grid-line" x1="0" y1="160" x2="800" y2="160"/>
+        <line class="grid-line" x1="0" y1="240" x2="800" y2="240"/>
+        <line class="grid-line" x1="0" y1="320" x2="800" y2="320"/>
+        <line class="mid-line" x1="400" y1="0" x2="400" y2="400"/>
+
+        <!-- Bid (black) -->
+        <path d="M400,360 L400,280 L360,258 L320,228 L280,192 L240,168 L200,155 L160,148 L120,144 L80,142 L80,360 Z" fill="rgba(0,0,0,0.05)"/>
+        <polyline class="bid-area" points="400,280 360,258 320,228 280,192 240,168 200,155 160,148 120,144 80,142" fill="none"/>
+
+        <!-- Ask (red) -->
+        <path d="M400,360 L400,285 L440,262 L480,234 L520,200 L560,176 L600,162 L640,153 L680,148 L720,146 L720,360 Z" fill="rgba(255,0,0,0.04)"/>
+        <polyline class="ask-area" points="400,285 440,262 480,234 520,200 560,176 600,162 640,153 680,148 720,146" fill="none"/>
+
+        <text class="marker" x="370" y="20">MID</text>
+
+        <text class="axis-label" x="80" y="390">104,228</text>
+        <text class="axis-label" x="240" y="390">104,230</text>
+        <text class="axis-label" x="540" y="390">104,234</text>
+        <text class="axis-label" x="700" y="390">104,236</text>
+        <text class="axis-label" x="8" y="324">2.0</text>
+        <text class="axis-label" x="8" y="244">4.0</text>
+        <text class="axis-label" x="8" y="164">6.0</text>
+        <text class="axis-label" x="8" y="84">8.0</text>
+      </svg>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card highlight">
+        <div class="stat-label">Spread</div>
+        <div class="stat-value">0.01<span class="stat-unit" style="color:#ff6666">USDT</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mid Price</div>
+        <div class="stat-value">104,232<span class="stat-unit">.55</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Latency</div>
+        <div class="stat-value">3<span class="stat-unit">MS</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Updates/s</div>
+        <div class="stat-value">1,204</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Quantflow <span class="red">v0.1</span></div>
+    <div>Feed <span class="red">Binance</span> / WSS</div>
+  </div>
+</div>
+</body>
+</html>
